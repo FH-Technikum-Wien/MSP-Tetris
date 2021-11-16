@@ -11,6 +11,9 @@ namespace Util
 
         [SerializeField] [Tooltip("The size of the world the camera needs to display in world units")]
         private Vector2 worldSize = new Vector2(10, 20);
+        
+        [SerializeField] [Tooltip("Additional offset that is applied to the camera position in world units")]
+        private Vector3 offset = new Vector3(-0.5f, -0.5f, 0.0f);
 
         [SerializeField] [Tooltip("The margin placed on the top in world units")]
         private float marginTop = 0.0f;
@@ -51,7 +54,7 @@ namespace Util
             }
 
             cameraToScale.transform.position = new Vector3(worldSize.x / 2.0f + (marginRight - marginLeft) / 2.0f,
-                worldSize.y / 2.0f + (marginTop - marginBottom) / 2.0f, -10.0f);
+                worldSize.y / 2.0f + (marginTop - marginBottom) / 2.0f, -10.0f) + offset;
         }
     }
 }

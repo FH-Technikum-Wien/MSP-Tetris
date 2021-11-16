@@ -1,9 +1,21 @@
+using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class TetrisBlock : MonoBehaviour
 {
     [SerializeField] private Transform[] blocks;
     [SerializeField] private Transform pivot;
+
+    
+    public delegate void DisabledDelegate(TetrisBlock sender);
+    public event DisabledDelegate OnDisable;
+    
+    
+    /// <summary>
+    /// Two dimensional array for storing all blocks
+    /// </summary>
+    private static readonly Transform[,] Grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
 
 
     private float _fallingSpeed = 1.0f;
@@ -25,7 +37,7 @@ public class TetrisBlock : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
             Rotate();
-        
+
         if (_time + _fallingSpeed > Time.time)
             return;
 
@@ -36,12 +48,17 @@ public class TetrisBlock : MonoBehaviour
     private void ApplyFalling()
     {
         // Bottom-reached check
-        if (!CheckMovement(0, -1))
+        if (CheckMovement(0, -1))
         {
+            Move(0, -1);
+        }
+        else
+        {
+            AddToGrid();
+            OnDisable?.Invoke(this);
             enabled = false;
         }
 
-        Move(0, -1);
     }
 
     private void Move(int xMovement, int yMovement)
@@ -54,8 +71,9 @@ public class TetrisBlock : MonoBehaviour
 
     private void Rotate()
     {
-        transform.RotateAround(pivot.position, new Vector3(0,0,1), 90);
-        ValidatePosition();
+        transform.RotateAround(pivot.position, new Vector3(0, 0, 1), 90);
+        if(!CheckMovement(0,0))
+            transform.RotateAround(pivot.position, new Vector3(0, 0, 1), -90);
     }
 
     private bool CheckMovement(int xMovement, int yMovement)
@@ -63,20 +81,23 @@ public class TetrisBlock : MonoBehaviour
         foreach (Transform block in blocks)
         {
             Vector3 position = block.position;
-            int gridPositionX = Mathf.RoundToInt(position.x);
-            int gridPositionY = Mathf.RoundToInt(position.y);
+            int gridPositionX = Mathf.RoundToInt(position.x + xMovement);
+            int gridPositionY = Mathf.RoundToInt(position.y + yMovement);
 
-            if (gridPositionX + xMovement < 0 || gridPositionX + xMovement > Constants.GRID_WIDTH ||
-                gridPositionY + yMovement <= 0)
-            {
+            if (gridPositionX is < 0 or >= Constants.GRID_WIDTH)
                 return false;
-            }
+
+            if (gridPositionY < 0)
+                return false;
+
+            if (Grid[gridPositionX, gridPositionY] != null)
+                return false;
         }
 
         return true;
     }
 
-    private void ValidatePosition()
+    private void AddToGrid()
     {
         foreach (Transform block in blocks)
         {
@@ -84,13 +105,7 @@ public class TetrisBlock : MonoBehaviour
             int gridPositionX = Mathf.RoundToInt(position.x);
             int gridPositionY = Mathf.RoundToInt(position.y);
 
-            if (gridPositionX < 0)
-                transform.position += new Vector3(gridPositionX * -1, 0, 0);
-            else if (gridPositionX >= Constants.GRID_WIDTH)
-                transform.position -= new Vector3(gridPositionX - (Constants.GRID_WIDTH - 1), 0, 0);
-
-            if (gridPositionY < 0)
-                transform.position += new Vector3(0, gridPositionY * -1, 0);
+            Grid[gridPositionX, gridPositionY] = block;
         }
     }
 }
