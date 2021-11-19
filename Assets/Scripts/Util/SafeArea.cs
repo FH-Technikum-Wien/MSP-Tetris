@@ -1,46 +1,94 @@
 using UnityEngine;
 
-[ExecuteAlways]
-[RequireComponent(typeof(RectTransform))]
-public class SafeArea : MonoBehaviour
+namespace Util
 {
-    [SerializeField] private readonly Canvas canvas;
-
-    private void Awake()
+    [ExecuteAlways]
+    [RequireComponent(typeof(RectTransform))]
+    public class SafeArea : MonoBehaviour
     {
-        if (canvas == null)
+        [SerializeField] private Canvas canvas;
+
+        [SerializeField] private Mode mode;
+
+        public enum Mode
         {
-            Debug.LogError("No canvas parent selected!");
-            return;
+            Normal,
+            Top,
+            Bottom,
+            Left,
+            Right
         }
 
-        ApplySafeArea();
-    }
+        private void Awake()
+        {
+            if (canvas == null)
+            {
+                Debug.LogError("No canvas parent selected!");
+                return;
+            }
+
+            ApplySafeArea();
+        }
 
 #if UNITY_EDITOR
-    private void Update()
-    {
-        ApplySafeArea();
-    }
+        private void Update()
+        {
+            ApplySafeArea();
+        }
 #endif
-    private void ApplySafeArea()
-    {
-        if (canvas == null)
-            return;
+        private void ApplySafeArea()
+        {
+            if (canvas == null)
+                return;
 
-        Rect safeArea = Screen.safeArea;
+            Rect safeArea = Screen.safeArea;
 
-        Vector2 anchorMin = safeArea.position;
-        Vector2 anchorMax = anchorMin + safeArea.size;
-        float width = canvas.pixelRect.width;
-        float height = canvas.pixelRect.height;
+            Vector2 anchorMin;
+            Vector2 anchorMax;
 
-        anchorMin.x /= width;
-        anchorMin.y /= height;
-        anchorMax.x /= width;
-        anchorMax.y /= height;
+            float width = canvas.pixelRect.width;
+            float height = canvas.pixelRect.height;
 
-        ((RectTransform)this.transform).anchorMin = anchorMin;
-        ((RectTransform)this.transform).anchorMax = anchorMax;
+            switch (mode)
+            {
+                case Mode.Normal:
+                    anchorMin = safeArea.position;
+                    anchorMax = anchorMin + safeArea.size;
+
+                    anchorMin.x /= width;
+                    anchorMax.x /= width;
+                    anchorMin.y /= height;
+                    anchorMax.y /= height;
+                    break;
+                
+                case Mode.Top:
+                    anchorMin = new Vector2(0, (safeArea.position.y + safeArea.size.y) / height);
+                    anchorMax = Vector2.one;
+                    break;
+                
+                case Mode.Bottom:
+                    anchorMin = Vector2.zero;
+                    anchorMax = new Vector2(1, safeArea.position.y / height);
+                    break;
+
+                case Mode.Left:
+                    anchorMin = new Vector2(0, 0);
+                    anchorMax = new Vector2(safeArea.position.x / width, 1);
+                    break;
+                
+                case Mode.Right:
+                    anchorMin = new Vector2((safeArea.position.x + safeArea.size.x) / width, 0);
+                    anchorMax = new Vector2(1, 1);
+                    break;
+                
+                default:
+                    anchorMin = Vector2.zero;
+                    anchorMax = Vector2.zero;
+                    break;
+            }
+
+            ((RectTransform) transform).anchorMin = anchorMin;
+            ((RectTransform) transform).anchorMax = anchorMax;
+        }
     }
 }
