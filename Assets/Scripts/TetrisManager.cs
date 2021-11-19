@@ -11,6 +11,7 @@ public class TetrisManager : MonoBehaviour
 
     private float _fallingSpeed = 1.0f;
     private float _time = 0.0f;
+    private bool _isGameOver = false;
 
     /// <summary>
     /// Two dimensional array for storing all blocks
@@ -19,6 +20,9 @@ public class TetrisManager : MonoBehaviour
 
     private void Update()
     {
+        if(_isGameOver)
+            return;
+        
         _time += Time.deltaTime;
 
         if (Input.GetKeyDown(KeyCode.A))
@@ -48,6 +52,8 @@ public class TetrisManager : MonoBehaviour
     {
         int index = Random.Range(0, tetrisBlocks.Length);
         _currentTetris = Instantiate(tetrisBlocks[index], spawnPosition.position, Quaternion.identity);
+        if(!CheckTetrisMovement(0,0))
+            GameOver();
     }
 
     private void MoveTetris(int xMovement, int yMovement)
@@ -64,6 +70,8 @@ public class TetrisManager : MonoBehaviour
         if (!CheckTetrisMovement(0, -1))
         {
             AddTetrisToGrid();
+            if(_isGameOver)
+                return;
             CheckTetrisRows();
             SpawnTetris();
             return;
@@ -92,9 +100,6 @@ public class TetrisManager : MonoBehaviour
             if (!CheckTetrisMovement(0, 0))
                 _currentTetris.transform.RotateAround(pivot.position, new Vector3(0, 0, 1), 90);
         }
-        
-        
-        
     }
 
     private bool CheckTetrisMovement(int xMovement, int yMovement)
@@ -125,6 +130,12 @@ public class TetrisManager : MonoBehaviour
             Vector3 position = block.position;
             int gridPositionX = Mathf.RoundToInt(position.x);
             int gridPositionY = Mathf.RoundToInt(position.y);
+
+            if (gridPositionY >= Constants.GRID_HEIGHT)
+            {
+                GameOver();
+                return;
+            }
 
             _grid[gridPositionX, gridPositionY] = block;
 
@@ -182,5 +193,11 @@ public class TetrisManager : MonoBehaviour
                 _grid[x, y] = null;
             }
         }
+    }
+
+    private void GameOver()
+    {
+        _isGameOver = true;
+        Debug.Log("GameOver!");
     }
 }
