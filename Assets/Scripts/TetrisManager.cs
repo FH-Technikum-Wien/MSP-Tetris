@@ -63,7 +63,6 @@ public class TetrisManager : MonoBehaviour
         // Bottom-reached check
         if (!CheckTetrisMovement(0, -1))
         {
-            _currentTetris.enabled = false;
             AddTetrisToGrid();
             CheckTetrisRows();
             SpawnTetris();
@@ -76,10 +75,26 @@ public class TetrisManager : MonoBehaviour
     private void RotateTetris()
     {
         Transform pivot = _currentTetris.GetPivot();
-        _currentTetris.transform.RotateAround(pivot.position, new Vector3(0, 0, 1), 90);
-        // If rotation would be illegal, revert it
-        if (!CheckTetrisMovement(0, 0))
+
+        if (_currentTetris.HasOnlyTwoPosition)
+        {
+            // Ping pong between two rotation states
+            float angle = _currentTetris.transform.rotation.eulerAngles.z <= 45 ? 90 : -90;
+            _currentTetris.transform.RotateAround(pivot.position, new Vector3(0, 0, 1), -angle);
+            // If rotation would be illegal, revert it
+            if (!CheckTetrisMovement(0, 0))
+                _currentTetris.transform.RotateAround(pivot.position, new Vector3(0, 0, 1), angle);
+        }
+        else
+        {
             _currentTetris.transform.RotateAround(pivot.position, new Vector3(0, 0, 1), -90);
+            // If rotation would be illegal, revert it
+            if (!CheckTetrisMovement(0, 0))
+                _currentTetris.transform.RotateAround(pivot.position, new Vector3(0, 0, 1), 90);
+        }
+        
+        
+        
     }
 
     private bool CheckTetrisMovement(int xMovement, int yMovement)
@@ -112,6 +127,11 @@ public class TetrisManager : MonoBehaviour
             int gridPositionY = Mathf.RoundToInt(position.y);
 
             _grid[gridPositionX, gridPositionY] = block;
+
+            block.parent = null; 
+            
+            // Delete not needed parent and pivot
+            Destroy(_currentTetris.gameObject);
         }
     }
 
