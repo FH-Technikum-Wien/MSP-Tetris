@@ -67,11 +67,11 @@ namespace Util
             // Either set to max width or max height
             if (aspectRatio >= verticalWorldSize / horizontalWorldSize)
             {
-                cameraToScale.orthographicSize = aspectRatio * horizontalWorldSize / 2.0f;
+                cameraToScale.orthographicSize = aspectRatio * (horizontalWorldSize / 2.0f);
             }
             else
             {
-                cameraToScale.orthographicSize = verticalWorldSize / 2;
+                cameraToScale.orthographicSize = verticalWorldSize / 2.0f;
             }
 
             if (applySafeArea)
@@ -101,11 +101,11 @@ namespace Util
                 // Re-check if horizontal or vertical should be used
                 if (aspectRatio >= verticalWorldSize / horizontalWorldSize)
                 {
-                    cameraToScale.orthographicSize = aspectRatio * horizontalWorldSize / 2.0f;
+                    cameraToScale.orthographicSize = aspectRatio * (horizontalWorldSize / 2.0f);
                 }
                 else
                 {
-                    cameraToScale.orthographicSize = verticalWorldSize / 2;
+                    cameraToScale.orthographicSize = verticalWorldSize / 2.0f;
                 }
             }
             
