@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Random = UnityEngine.Random;
 
 namespace Tetris
@@ -11,7 +12,6 @@ namespace Tetris
         [SerializeField] private TetrisPreview tetrisPreview;
         [SerializeField] private TetrisScore tetrisScore;
         [SerializeField] private TetrisLevel tetrisLevel;
-
 
         public delegate void GameOverDelegate();
 
@@ -37,7 +37,17 @@ namespace Tetris
         /// Two dimensional array for storing all blocks
         /// </summary>
         private Transform[,] _grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
-        
+
+        ///////////
+        // INPUT //
+        ///////////
+        private float _pressToHoldDelay = 0.25f;
+        private float _timeSincePress = 0.0f;
+        private bool _isHolding = false;
+
+        private float _inputTime = 0.0f;
+        private float _inputSpeed = 0.2f;
+
 
         private void Update()
         {
@@ -46,20 +56,15 @@ namespace Tetris
 
             _time += Time.deltaTime;
 
-            if (Input.GetKeyDown(KeyCode.A))
-                MoveTetris(-1, 0);
+            Touch[] touches = Input.touches;
 
-            if (Input.GetKeyDown(KeyCode.D))
-                MoveTetris(1, 0);
+            if (touches.Length > 0)
+            {
+                Touch touch = touches[0];
+                Debug.Log(touch);
+            }
 
-            if (Input.GetKeyDown(KeyCode.S))
-                MoveTetris(0, -1);
-
-            if (Input.GetKeyDown(KeyCode.W))
-                MoveTetris(0, 1);
-
-            if (Input.GetKeyDown(KeyCode.Space))
-                RotateTetris();
+            HandleInput(Time.deltaTime);
 
             float fallingSpeed = 1 / _levelSpeedTable[_currentLevel - 1];
             if (_time < fallingSpeed)
@@ -88,12 +93,58 @@ namespace Tetris
             tetrisLevel.UpdateLevel(_currentLevel);
             _time = 0.0f;
             _isGameOver = false;
-            
-            if(_tetrisBlockParent)
+
+            if (_tetrisBlockParent)
                 Destroy(_tetrisBlockParent);
             _tetrisBlockParent = new GameObject("TetrisBlocks");
 
             _grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
+        }
+
+        private void HandleInput(float deltaTime)
+        {
+            if (Input.GetKey(KeyCode.A))
+            {
+                _inputTime += deltaTime;
+                
+                if (!_isHolding)
+                {
+                    MoveTetris(-1, 0);
+                    _isHolding = true;
+                    _timeSincePress = Time.time;
+                }
+                else if(_timeSincePress + _pressToHoldDelay < Time.time)
+                {
+                    if (_inputTime >= _inputSpeed)
+                    {
+                        _inputTime -= _inputSpeed;
+                        MoveTetris(-1, 0);
+                    }
+                }
+            }
+            else
+            {
+                _isHolding = false;
+                _inputTime = 0.0f;
+            }
+            
+            
+            /*
+            if (Input.GetKeyDown(KeyCode.A) || Input.GetKey(KeyCode.A))
+                MoveTetris(-1, 0);
+
+            if (Input.GetKeyDown(KeyCode.D) || Input.GetKey(KeyCode.D))
+                MoveTetris(1, 0);
+
+            if (Input.GetKeyDown(KeyCode.S) || Input.GetKey(KeyCode.S))
+                MoveTetris(0, -1);
+
+            if (Input.GetKeyDown(KeyCode.W) || Input.GetKey(KeyCode.W))
+                MoveTetris(0, 1);
+
+            if (Input.GetKeyDown(KeyCode.Space))
+                RotateTetris();
+                */
         }
 
 
@@ -101,7 +152,7 @@ namespace Tetris
         {
             _currentTetris = Instantiate(tetrisBlocks[_nextTetrisIndex], spawnPosition.position, Quaternion.identity,
                 _tetrisBlockParent.transform);
-            
+
             if (!CheckTetrisMovement(0, 0))
                 GameOver();
 
@@ -221,8 +272,8 @@ namespace Tetris
                 --y;
                 ++rowsDeleted;
             }
-            
-            if(rowsDeleted > 0)
+
+            if (rowsDeleted > 0)
                 AddScore(rowsDeleted);
         }
 
