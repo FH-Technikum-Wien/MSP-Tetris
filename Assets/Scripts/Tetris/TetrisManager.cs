@@ -18,13 +18,13 @@ namespace Tetris
         public event GameOverDelegate OnGameOver;
 
         // Used for deletion
-        private GameObject tetrisBlockParent;
+        private GameObject _tetrisBlockParent;
 
         private TetrisBlock _currentTetris = null;
         private int _nextTetrisIndex = 0;
 
         private float _time = 0.0f;
-        private bool _isGameOver = false;
+        private bool _isGameOver = true;
 
         private readonly int[] _pointTable = {100, 300, 500, 800};
         private int _currentScore = 0;
@@ -74,7 +74,7 @@ namespace Tetris
             ResetGame();
             int index = Random.Range(0, tetrisBlocks.Length);
             _currentTetris = Instantiate(tetrisBlocks[index], spawnPosition.position, Quaternion.identity,
-                tetrisBlockParent.transform);
+                _tetrisBlockParent.transform);
 
             _nextTetrisIndex = Random.Range(0, tetrisBlocks.Length);
             tetrisPreview.ShowNextTetris(_nextTetrisIndex);
@@ -89,9 +89,9 @@ namespace Tetris
             _time = 0.0f;
             _isGameOver = false;
             
-            if(tetrisBlockParent)
-                Destroy(tetrisBlockParent);
-            tetrisBlockParent = new GameObject("TetrisBlocks");
+            if(_tetrisBlockParent)
+                Destroy(_tetrisBlockParent);
+            _tetrisBlockParent = new GameObject("TetrisBlocks");
 
             _grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
         }
@@ -100,7 +100,7 @@ namespace Tetris
         private void SpawnTetris()
         {
             _currentTetris = Instantiate(tetrisBlocks[_nextTetrisIndex], spawnPosition.position, Quaternion.identity,
-                tetrisBlockParent.transform);
+                _tetrisBlockParent.transform);
             
             if (!CheckTetrisMovement(0, 0))
                 GameOver();
@@ -192,7 +192,7 @@ namespace Tetris
 
                 _grid[gridPositionX, gridPositionY] = block;
 
-                block.parent = tetrisBlockParent.transform;
+                block.parent = _tetrisBlockParent.transform;
 
                 // Delete not needed parent and pivot
                 Destroy(_currentTetris.gameObject);
