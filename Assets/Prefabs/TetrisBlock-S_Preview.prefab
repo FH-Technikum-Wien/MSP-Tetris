@@ -7,6 +7,22 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1945670799433672665, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1945670799433672665, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
+    - target: {fileID: 2052924221580951554, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2052924221580951554, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
     - target: {fileID: 3553123518372704649, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -54,6 +70,22 @@ PrefabInstance:
     - target: {fileID: 3553123518372704650, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
       propertyPath: m_Name
       value: TetrisBlock-S_Preview
+      objectReference: {fileID: 0}
+    - target: {fileID: 7175908136062009754, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7175908136062009754, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
+    - target: {fileID: 8845252051774308214, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8845252051774308214, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3553123518372704648, guid: 37865bd99d288394494efbcb6a1f14b5, type: 3}

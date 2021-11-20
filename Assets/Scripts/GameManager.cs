@@ -9,5 +9,11 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         tetrisManager.StartGame();
+        tetrisManager.OnGameOver += OnGameOver;
+    }
+
+    private void OnGameOver()
+    {
+        Debug.Log("Game Over!");
     }
 }

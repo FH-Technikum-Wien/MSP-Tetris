@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -8,24 +9,41 @@ namespace Tetris
         [SerializeField] private TetrisBlock[] tetrisBlocks;
         [SerializeField] private Transform spawnPosition;
         [SerializeField] private TetrisPreview tetrisPreview;
+        [SerializeField] private TetrisScore tetrisScore;
+        [SerializeField] private TetrisLevel tetrisLevel;
+
+
+        public delegate void GameOverDelegate();
+
+        public event GameOverDelegate OnGameOver;
+
+        // Used for deletion
+        private GameObject tetrisBlockParent;
 
         private TetrisBlock _currentTetris = null;
         private int _nextTetrisIndex = 0;
 
-        private float _fallingSpeed = 1.0f;
         private float _time = 0.0f;
         private bool _isGameOver = false;
+
+        private readonly int[] _pointTable = {100, 300, 500, 800};
+        private int _currentScore = 0;
+        private readonly float[] _levelSpeedTable = {1.0f, 2.0f, 4.0f, 8.0f};
+        private int _currentLevel = 1;
+
+        private readonly int[] _scoreLevelTable = {2000, 4000, 10000};
 
         /// <summary>
         /// Two dimensional array for storing all blocks
         /// </summary>
-        private readonly Transform[,] _grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
+        private Transform[,] _grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
+        
 
         private void Update()
         {
-            if(_isGameOver)
+            if (_isGameOver)
                 return;
-        
+
             _time += Time.deltaTime;
 
             if (Input.GetKeyDown(KeyCode.A))
@@ -43,28 +61,50 @@ namespace Tetris
             if (Input.GetKeyDown(KeyCode.Space))
                 RotateTetris();
 
-            if (_time < _fallingSpeed)
+            float fallingSpeed = 1 / _levelSpeedTable[_currentLevel - 1];
+            if (_time < fallingSpeed)
                 return;
 
-            _time -= _fallingSpeed;
+            _time -= fallingSpeed;
             ApplyFalling();
         }
-    
+
         public void StartGame()
         {
+            ResetGame();
             int index = Random.Range(0, tetrisBlocks.Length);
-            _currentTetris = Instantiate(tetrisBlocks[index], spawnPosition.position, Quaternion.identity);
+            _currentTetris = Instantiate(tetrisBlocks[index], spawnPosition.position, Quaternion.identity,
+                tetrisBlockParent.transform);
+
             _nextTetrisIndex = Random.Range(0, tetrisBlocks.Length);
             tetrisPreview.ShowNextTetris(_nextTetrisIndex);
+        }
+
+        public void ResetGame()
+        {
+            _currentScore = 0;
+            tetrisScore.UpdateScore(_currentScore);
+            _currentLevel = 1;
+            tetrisLevel.UpdateLevel(_currentLevel);
+            _time = 0.0f;
+            _isGameOver = false;
+            
+            if(tetrisBlockParent)
+                Destroy(tetrisBlockParent);
+            tetrisBlockParent = new GameObject("TetrisBlocks");
+
+            _grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
         }
 
 
         private void SpawnTetris()
         {
-            _currentTetris = Instantiate(tetrisBlocks[_nextTetrisIndex], spawnPosition.position, Quaternion.identity);
-            if(!CheckTetrisMovement(0,0))
+            _currentTetris = Instantiate(tetrisBlocks[_nextTetrisIndex], spawnPosition.position, Quaternion.identity,
+                tetrisBlockParent.transform);
+            
+            if (!CheckTetrisMovement(0, 0))
                 GameOver();
-        
+
             _nextTetrisIndex = Random.Range(0, tetrisBlocks.Length);
             tetrisPreview.ShowNextTetris(_nextTetrisIndex);
         }
@@ -83,7 +123,7 @@ namespace Tetris
             if (!CheckTetrisMovement(0, -1))
             {
                 AddTetrisToGrid();
-                if(_isGameOver)
+                if (_isGameOver)
                     return;
                 CheckTetrisRows();
                 SpawnTetris();
@@ -152,8 +192,8 @@ namespace Tetris
 
                 _grid[gridPositionX, gridPositionY] = block;
 
-                block.parent = null; 
-            
+                block.parent = tetrisBlockParent.transform;
+
                 // Delete not needed parent and pivot
                 Destroy(_currentTetris.gameObject);
             }
@@ -161,6 +201,7 @@ namespace Tetris
 
         private void CheckTetrisRows()
         {
+            int rowsDeleted = 0;
             for (int y = 0; y < _grid.GetLength(1); y++)
             {
                 int count = 0;
@@ -172,13 +213,17 @@ namespace Tetris
                     ++count;
                 }
 
-                if (count != _grid.GetLength(0)) 
+                if (count != _grid.GetLength(0))
                     continue;
-            
+
                 DeleteTetrisRow(y);
                 MoveTetrisRowsDown(y + 1);
                 --y;
+                ++rowsDeleted;
             }
+            
+            if(rowsDeleted > 0)
+                AddScore(rowsDeleted);
         }
 
         private void DeleteTetrisRow(int row)
@@ -208,10 +253,26 @@ namespace Tetris
             }
         }
 
+
+        private void AddScore(int numberOfRowsCleared)
+        {
+            _currentScore = _pointTable[numberOfRowsCleared - 1] * _currentLevel;
+            tetrisScore.UpdateScore(_currentScore);
+
+            if (_currentLevel <= _scoreLevelTable.Length - 1 && _currentScore >= _scoreLevelTable[_currentLevel])
+                IncreaseLevel();
+        }
+
+        private void IncreaseLevel()
+        {
+            ++_currentLevel;
+            tetrisLevel.UpdateLevel(_currentLevel);
+        }
+
         private void GameOver()
         {
             _isGameOver = true;
-            Debug.Log("GameOver!");
+            OnGameOver?.Invoke();
         }
     }
 }

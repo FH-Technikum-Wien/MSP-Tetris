@@ -11,9 +11,25 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 1.4999998
       objectReference: {fileID: 0}
+    - target: {fileID: 510809965759727201, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 510809965759727201, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
     - target: {fileID: 1730714824489585147, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.4999995
+      objectReference: {fileID: 0}
+    - target: {fileID: 3419418817746218101, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3419418817746218101, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
       objectReference: {fileID: 0}
     - target: {fileID: 3487561066142917615, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -65,15 +81,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3553123518372704650, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
       propertyPath: m_Name
-      value: TetrisBlock-I_Preview Variant
+      value: TetrisBlock-I_Preview
       objectReference: {fileID: 0}
     - target: {fileID: 3553123518432079721, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 3678941596112714205, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3678941596112714205, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
     - target: {fileID: 6221826380348198434, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.49999976
+      objectReference: {fileID: 0}
+    - target: {fileID: 7001077179714366380, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7001077179714366380, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3553123518372704648, guid: 996d44a45934a954a8b6492ee118f23a, type: 3}

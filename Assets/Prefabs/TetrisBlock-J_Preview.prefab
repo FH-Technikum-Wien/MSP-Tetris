@@ -55,6 +55,38 @@ PrefabInstance:
       propertyPath: m_Name
       value: TetrisBlock-J_Preview
       objectReference: {fileID: 0}
+    - target: {fileID: 4818411636138567641, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4818411636138567641, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
+    - target: {fileID: 5436901695071449294, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5436901695071449294, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
+    - target: {fileID: 6211046762552665800, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6211046762552665800, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
+    - target: {fileID: 7633550111734613361, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7633550111734613361, guid: 9480f7120c4f889418b2801db6861739, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 1837781199
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3553123518372704648, guid: 9480f7120c4f889418b2801db6861739, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 9480f7120c4f889418b2801db6861739, type: 3}
