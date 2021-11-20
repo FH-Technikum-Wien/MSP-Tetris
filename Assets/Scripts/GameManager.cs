@@ -7,6 +7,6 @@ public class GameManager : MonoBehaviour
     
     private void Awake()
     {
-        tetrisManager.SpawnTetris();
+        tetrisManager.StartGame();
     }
 }

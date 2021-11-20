@@ -6,8 +6,10 @@ public class TetrisManager : MonoBehaviour
 {
     [SerializeField] private TetrisBlock[] tetrisBlocks;
     [SerializeField] private Transform spawnPosition;
+    [SerializeField] private TetrisPreview tetrisPreview;
 
     private TetrisBlock _currentTetris = null;
+    private int _nextTetrisIndex = 0;
 
     private float _fallingSpeed = 1.0f;
     private float _time = 0.0f;
@@ -46,14 +48,24 @@ public class TetrisManager : MonoBehaviour
         _time -= _fallingSpeed;
         ApplyFalling();
     }
-
-
-    public void SpawnTetris()
+    
+    public void StartGame()
     {
         int index = Random.Range(0, tetrisBlocks.Length);
         _currentTetris = Instantiate(tetrisBlocks[index], spawnPosition.position, Quaternion.identity);
+        _nextTetrisIndex = Random.Range(0, tetrisBlocks.Length);
+        tetrisPreview.ShowNextTetris(_nextTetrisIndex);
+    }
+
+
+    private void SpawnTetris()
+    {
+        _currentTetris = Instantiate(tetrisBlocks[_nextTetrisIndex], spawnPosition.position, Quaternion.identity);
         if(!CheckTetrisMovement(0,0))
             GameOver();
+        
+        _nextTetrisIndex = Random.Range(0, tetrisBlocks.Length);
+        tetrisPreview.ShowNextTetris(_nextTetrisIndex);
     }
 
     private void MoveTetris(int xMovement, int yMovement)
