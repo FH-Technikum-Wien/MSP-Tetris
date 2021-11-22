@@ -12,6 +12,11 @@ namespace Tetris
         [SerializeField] private TetrisPreview tetrisPreview;
         [SerializeField] private TetrisScore tetrisScore;
         [SerializeField] private TetrisLevel tetrisLevel;
+        [Header("Tetris")] [SerializeField] private int[] pointTable = {100, 300, 500, 800};
+        [SerializeField] private float[] levelSpeedTable = {1.0f, 2.0f, 4.0f, 8.0f, 12.0f};
+        [SerializeField] private int[] scoreLevelTable = {1000, 2000, 4000, 8000, 12000};
+        [Header("Input")] [SerializeField] private float minTouchDelta;
+        [SerializeField] private float holdingMoveSpeed = 5.0f;
 
         public delegate void GameOverDelegate();
 
@@ -23,15 +28,11 @@ namespace Tetris
         private TetrisBlock _currentTetris = null;
         private int _nextTetrisIndex = 0;
 
-        private float _time = 0.0f;
+        private float _fallingTime = 0.0f;
         private bool _isGameOver = true;
 
-        private readonly int[] _pointTable = {100, 300, 500, 800};
         private int _currentScore = 0;
-        private readonly float[] _levelSpeedTable = {1.0f, 2.0f, 4.0f, 8.0f};
         private int _currentLevel = 1;
-
-        private readonly int[] _scoreLevelTable = {2000, 4000, 10000};
 
         /// <summary>
         /// Two dimensional array for storing all blocks
@@ -41,42 +42,93 @@ namespace Tetris
         ///////////
         // INPUT //
         ///////////
-        private float _pressToHoldDelay = 0.25f;
-        private float _timeSincePress = 0.0f;
-        private bool _isHolding = false;
 
-        private float _inputTime = 0.0f;
-        private float _inputSpeed = 0.2f;
+        private PlayerControls _playerControls;
 
+        private Vector2 _cameraSizeWorldUnits;
+        private Vector2 _world2Pixel;
+
+        private float _moveLeftRightAmount;
+        private float _moveDownAmount;
+
+        private Vector2 _touchStartPosition;
+        private bool _isMovingLeftRight;
+        private bool _isMovingDown;
+
+        private bool _isHoldingMove;
+        private float _holdingTime = 0.0f;
+
+
+        private void Awake()
+        {
+            _playerControls = new PlayerControls();
+        }
+
+        private void Start()
+        {
+            // Calculate camera size in world units
+            _cameraSizeWorldUnits.y = Camera.main.orthographicSize * 2;
+            _cameraSizeWorldUnits.x = _cameraSizeWorldUnits.y * Screen.width / Screen.height;
+            _world2Pixel.x = Screen.width / _cameraSizeWorldUnits.x;
+            _world2Pixel.y = Screen.height / _cameraSizeWorldUnits.y;
+
+
+            _playerControls.Player.MoveTouch.started += OnMoveTouchStarted;
+            _playerControls.Player.MoveTouch.performed += OnMoveTouchPerformed;
+            _playerControls.Player.MoveTouch.canceled += OnMoveTouchCanceled;
+
+            _playerControls.Player.MoveKeyboard.performed += OnMoveKeyboardPerformed;
+            _playerControls.Player.MoveKeyboard.canceled += OnMoveKeyboardCanceled;
+            _playerControls.Player.MoveKeyboardHold.performed += OnMoveKeyboardHoldPerformed;
+            _playerControls.Player.MoveKeyboardHold.canceled += OnMoveKeyboardHoldCanceled;
+
+
+            _playerControls.Player.Rotate.performed += OnRotatePerformed;
+        }
+
+
+        private void OnDisable()
+        {
+            _playerControls.Disable();
+        }
 
         private void Update()
         {
             if (_isGameOver)
                 return;
 
-            _time += Time.deltaTime;
-
-            Touch[] touches = Input.touches;
-
-            if (touches.Length > 0)
+            if (!_isHoldingMove || _isHoldingMove && 1.0f / holdingMoveSpeed + _holdingTime <= Time.time)
             {
-                Touch touch = touches[0];
-                Debug.Log(touch);
+                _holdingTime = Time.time;
+                
+                // Only allow either left-right or down
+                if (_isMovingLeftRight)
+                {
+                    float direction = Mathf.Sign(_moveLeftRightAmount);
+                    int movements = (int) Mathf.Abs(_moveLeftRightAmount);
+                    for (int i = 0; i < movements; i++)
+                        MoveTetris((int) direction, 0);
+                    if (!_isHoldingMove)
+                        _moveLeftRightAmount -= movements * direction;
+                }
+                else if (_isMovingDown)
+                {
+                    int movements = (int) Mathf.Abs(_moveDownAmount);
+                    for (int i = 0; i < movements; i++)
+                        MoveTetris(0, -1);
+                    if (!_isHoldingMove)
+                        _moveDownAmount += movements;
+                }
             }
 
-            HandleInput(Time.deltaTime);
-
-            float fallingSpeed = 1 / _levelSpeedTable[_currentLevel - 1];
-            if (_time < fallingSpeed)
-                return;
-
-            _time -= fallingSpeed;
-            ApplyFalling();
+            ApplyFalling(Time.deltaTime);
         }
 
         public void StartGame()
         {
             ResetGame();
+            EnableGameControls();
+
             int index = Random.Range(0, tetrisBlocks.Length);
             _currentTetris = Instantiate(tetrisBlocks[index], spawnPosition.position, Quaternion.identity,
                 _tetrisBlockParent.transform);
@@ -87,11 +139,12 @@ namespace Tetris
 
         public void ResetGame()
         {
+            DisableGameControls();
             _currentScore = 0;
             tetrisScore.UpdateScore(_currentScore);
             _currentLevel = 1;
             tetrisLevel.UpdateLevel(_currentLevel);
-            _time = 0.0f;
+            _fallingTime = 0.0f;
             _isGameOver = false;
 
             if (_tetrisBlockParent)
@@ -101,52 +154,19 @@ namespace Tetris
             _grid = new Transform[Constants.GRID_WIDTH, Constants.GRID_HEIGHT + 5];
         }
 
-        private void HandleInput(float deltaTime)
+        public void EnableGameControls()
         {
-            if (Input.GetKey(KeyCode.A))
-            {
-                _inputTime += deltaTime;
-                
-                if (!_isHolding)
-                {
-                    MoveTetris(-1, 0);
-                    _isHolding = true;
-                    _timeSincePress = Time.time;
-                }
-                else if(_timeSincePress + _pressToHoldDelay < Time.time)
-                {
-                    if (_inputTime >= _inputSpeed)
-                    {
-                        _inputTime -= _inputSpeed;
-                        MoveTetris(-1, 0);
-                    }
-                }
-            }
-            else
-            {
-                _isHolding = false;
-                _inputTime = 0.0f;
-            }
-            
-            
-            /*
-            if (Input.GetKeyDown(KeyCode.A) || Input.GetKey(KeyCode.A))
-                MoveTetris(-1, 0);
-
-            if (Input.GetKeyDown(KeyCode.D) || Input.GetKey(KeyCode.D))
-                MoveTetris(1, 0);
-
-            if (Input.GetKeyDown(KeyCode.S) || Input.GetKey(KeyCode.S))
-                MoveTetris(0, -1);
-
-            if (Input.GetKeyDown(KeyCode.W) || Input.GetKey(KeyCode.W))
-                MoveTetris(0, 1);
-
-            if (Input.GetKeyDown(KeyCode.Space))
-                RotateTetris();
-                */
+            _playerControls.Player.Enable();
+            _playerControls.UI.Disable();
         }
 
+        public void DisableGameControls()
+        {
+            _playerControls.Player.Disable();
+            _playerControls.UI.Enable();
+        }
+
+        #region Tetris Logic
 
         private void SpawnTetris()
         {
@@ -168,8 +188,16 @@ namespace Tetris
             }
         }
 
-        private void ApplyFalling()
+        private void ApplyFalling(float deltaTime)
         {
+            _fallingTime += deltaTime;
+
+            float fallingSpeed = 1 / levelSpeedTable[_currentLevel - 1];
+            if (_fallingTime < fallingSpeed)
+                return;
+
+            _fallingTime -= fallingSpeed;
+
             // Bottom-reached check
             if (!CheckTetrisMovement(0, -1))
             {
@@ -303,14 +331,17 @@ namespace Tetris
                 }
             }
         }
+        
+        #endregion
 
-
+        #region Tetris Gameplay
+        
         private void AddScore(int numberOfRowsCleared)
         {
-            _currentScore = _pointTable[numberOfRowsCleared - 1] * _currentLevel;
+            _currentScore += pointTable[numberOfRowsCleared - 1] * _currentLevel;
             tetrisScore.UpdateScore(_currentScore);
 
-            if (_currentLevel <= _scoreLevelTable.Length - 1 && _currentScore >= _scoreLevelTable[_currentLevel])
+            if (_currentLevel <= scoreLevelTable.Length && _currentScore >= scoreLevelTable[_currentLevel - 1])
                 IncreaseLevel();
         }
 
@@ -325,5 +356,116 @@ namespace Tetris
             _isGameOver = true;
             OnGameOver?.Invoke();
         }
+        
+        #endregion
+
+        #region Player Input
+
+        #region Touch
+
+        private void OnMoveTouchStarted(InputAction.CallbackContext obj)
+        {
+            _touchStartPosition = obj.ReadValue<Vector2>();
+        }
+
+        private void OnMoveTouchPerformed(InputAction.CallbackContext obj)
+        {
+            Vector2 position = obj.ReadValue<Vector2>();
+            Vector2 delta = position - _touchStartPosition;
+            // Wait until min delta is reached
+            if (delta.magnitude < minTouchDelta)
+                return;
+
+            // Prevent upwards delta
+            delta.y = Mathf.Min(delta.y, 0.0f);
+
+            // Determine if user wants to move left/right or down
+            if (!_isMovingLeftRight && !_isMovingDown)
+            {
+                float angle = Vector2.Angle(Vector2.down, delta);
+
+                if (angle >= 45)
+                    _isMovingLeftRight = true;
+                else
+                    _isMovingDown = true;
+            }
+
+            if (_isMovingLeftRight)
+            {
+                _moveLeftRightAmount += delta.x / _world2Pixel.x;
+            }
+            else if (_isMovingDown)
+            {
+                _moveDownAmount += delta.y / _world2Pixel.x;
+            }
+
+            _touchStartPosition = position;
+        }
+
+        private void OnMoveTouchCanceled(InputAction.CallbackContext obj)
+        {
+            _isMovingDown = false;
+            _isMovingLeftRight = false;
+            _moveDownAmount = 0;
+            _moveLeftRightAmount = 0;
+        }
+        
+        #endregion
+
+        #region Keyboard
+
+        private void OnMoveKeyboardPerformed(InputAction.CallbackContext obj)
+        {
+            Vector2 delta = obj.ReadValue<Vector2>();
+
+            // Determine if user wants to move left/right or down
+            if (!_isMovingLeftRight && !_isMovingDown)
+            {
+                if (Mathf.Abs(delta.x) > -delta.y)
+                    _isMovingLeftRight = true;
+                else
+                    _isMovingDown = true;
+            }
+
+            if (_isMovingLeftRight)
+                _moveLeftRightAmount += delta.x;
+            else if (_isMovingDown)
+                _moveDownAmount += delta.y;
+        }
+        
+        private void OnMoveKeyboardCanceled(InputAction.CallbackContext obj)
+        {
+            _isMovingLeftRight = false;
+            _isMovingDown = false;
+            _moveLeftRightAmount = 0.0f;
+            _moveDownAmount = 0.0f;
+        }
+
+        private void OnMoveKeyboardHoldPerformed(InputAction.CallbackContext obj)
+        {
+            _isHoldingMove = true;
+            
+            Vector2 delta = obj.ReadValue<Vector2>();
+            if (_isMovingLeftRight)
+                _moveLeftRightAmount += delta.x;
+            else if (_isMovingDown)
+                _moveDownAmount += delta.y;
+        }
+
+        private void OnMoveKeyboardHoldCanceled(InputAction.CallbackContext obj)
+        {
+            _isHoldingMove = false;
+            _moveLeftRightAmount = 0.0f;
+            _moveDownAmount = 0.0f;
+        }
+        
+        #endregion
+
+        private void OnRotatePerformed(InputAction.CallbackContext obj)
+        {
+            RotateTetris();
+        }
+
+        #endregion
     }
 }
