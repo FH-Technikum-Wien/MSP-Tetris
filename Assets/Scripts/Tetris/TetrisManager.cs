@@ -133,6 +133,8 @@ namespace Tetris
             ApplyFalling(Time.deltaTime);
         }
 
+        public int CurrentScore => _currentScore;
+
         public void StartGame()
         {
             ResetGame();
