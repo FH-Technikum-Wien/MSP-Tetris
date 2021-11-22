@@ -251,6 +251,10 @@ namespace Tetris
             {
                 MoveTetris(0, -1);
             }
+            
+            // Skip waiting time
+            ApplyFalling(10000);
+            _fallingTime = 0.0f;
         }
 
         private bool CheckTetrisMovement(int xMovement, int yMovement)
