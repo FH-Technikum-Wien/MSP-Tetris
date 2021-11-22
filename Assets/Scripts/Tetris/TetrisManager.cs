@@ -15,7 +15,9 @@ namespace Tetris
         [Header("Tetris")] [SerializeField] private int[] pointTable = {100, 300, 500, 800};
         [SerializeField] private float[] levelSpeedTable = {1.0f, 2.0f, 4.0f, 8.0f, 12.0f};
         [SerializeField] private int[] scoreLevelTable = {1000, 2000, 4000, 8000, 12000};
-        [Header("Input")] [SerializeField] private float minTouchDelta;
+        [Header("Input")] [SerializeField] private float moveTouchMinDelta = 1.0f;
+        [SerializeField] private float dropTouchMinDelta = -1.0f;
+        [SerializeField] private float dropTouchMaxTime = 0.5f;
         [SerializeField] private float holdingMoveSpeed = 5.0f;
 
         public delegate void GameOverDelegate();
@@ -56,7 +58,11 @@ namespace Tetris
         private bool _isMovingDown;
 
         private bool _isHoldingMove;
-        private float _holdingTime = 0.0f;
+        private float _holdingTime;
+
+        private float _dropTouchStartPosition;
+        private float _dropTouchEndPosition;
+        private float _dropTouchStartTime;
 
 
         private void Awake()
@@ -81,11 +87,14 @@ namespace Tetris
             _playerControls.Player.MoveKeyboard.canceled += OnMoveKeyboardCanceled;
             _playerControls.Player.MoveKeyboardHold.performed += OnMoveKeyboardHoldPerformed;
             _playerControls.Player.MoveKeyboardHold.canceled += OnMoveKeyboardHoldCanceled;
-
-
+            
             _playerControls.Player.Rotate.performed += OnRotatePerformed;
+            
+            _playerControls.Player.Drop.performed += OnDropPerformed;
+            _playerControls.Player.DropTouch.started += OnDropTouchStarted;
+            _playerControls.Player.DropTouch.performed += OnDropTouchPerformed;
+            _playerControls.Player.DropTouch.canceled += OnDropTouchCanceled;
         }
-
 
         private void OnDisable()
         {
@@ -234,6 +243,14 @@ namespace Tetris
             }
         }
 
+        private void DropTetris()
+        {
+            while (CheckTetrisMovement(0, -1))
+            {
+                MoveTetris(0, -1);
+            }
+        }
+
         private bool CheckTetrisMovement(int xMovement, int yMovement)
         {
             foreach (Transform block in _currentTetris.GetBlocks())
@@ -373,7 +390,7 @@ namespace Tetris
             Vector2 position = obj.ReadValue<Vector2>();
             Vector2 delta = position - _touchStartPosition;
             // Wait until min delta is reached
-            if (delta.magnitude < minTouchDelta)
+            if (delta.magnitude < moveTouchMinDelta)
                 return;
 
             // Prevent upwards delta
@@ -408,6 +425,33 @@ namespace Tetris
             _isMovingLeftRight = false;
             _moveDownAmount = 0;
             _moveLeftRightAmount = 0;
+        }
+
+        private void OnDropTouchStarted(InputAction.CallbackContext obj)
+        {
+            if(_isMovingLeftRight)
+                return;
+            
+            _dropTouchStartPosition = obj.ReadValue<float>();
+            _dropTouchEndPosition = _dropTouchStartPosition;
+            _dropTouchStartTime = Time.time;
+        }
+        
+        private void OnDropTouchPerformed(InputAction.CallbackContext obj)
+        {
+            if(_isMovingLeftRight)
+                return;
+            _dropTouchEndPosition = obj.ReadValue<float>();
+        }
+        
+        private void OnDropTouchCanceled(InputAction.CallbackContext obj)
+        {
+            if(_isMovingLeftRight)
+                return;
+            
+            float delta = (_dropTouchEndPosition - _dropTouchStartPosition) / _world2Pixel.y;
+            if (delta <= dropTouchMinDelta && _dropTouchStartTime + dropTouchMaxTime >= Time.time)
+                DropTetris();
         }
         
         #endregion
@@ -457,6 +501,11 @@ namespace Tetris
             _isHoldingMove = false;
             _moveLeftRightAmount = 0.0f;
             _moveDownAmount = 0.0f;
+        }
+        
+        private void OnDropPerformed(InputAction.CallbackContext obj)
+        {
+            DropTetris();
         }
         
         #endregion

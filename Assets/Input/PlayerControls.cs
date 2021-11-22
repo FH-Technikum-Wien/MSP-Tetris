@@ -62,6 +62,24 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Drop"",
+                    ""type"": ""Value"",
+                    ""id"": ""b0834925-8da7-4a1b-8b71-1ff7f84045d4"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""DropTouch"",
+                    ""type"": ""Value"",
+                    ""id"": ""9d8ac37f-e026-4794-9711-329f301b8ff5"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -339,6 +357,50 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""action"": ""MoveTouch"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""aa275664-945c-49d6-8111-246e8f7e9a52"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Drop"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""One Modifier"",
+                    ""id"": ""0d3277fd-b2da-42dd-a405-231a3af6bc9e"",
+                    ""path"": ""OneModifier"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""DropTouch"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""modifier"",
+                    ""id"": ""51e41822-43a6-401a-a2b3-484c9171a7c9"",
+                    ""path"": ""<Touchscreen>/press"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Touch"",
+                    ""action"": ""DropTouch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""binding"",
+                    ""id"": ""dc4430a8-ca3f-46a2-a4e6-46d5425410d6"",
+                    ""path"": ""<Touchscreen>/primaryTouch/position/y"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Touch"",
+                    ""action"": ""DropTouch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         },
@@ -407,6 +469,8 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_Player_MoveKeyboard = m_Player.FindAction("MoveKeyboard", throwIfNotFound: true);
         m_Player_MoveKeyboardHold = m_Player.FindAction("MoveKeyboardHold", throwIfNotFound: true);
         m_Player_MoveTouch = m_Player.FindAction("MoveTouch", throwIfNotFound: true);
+        m_Player_Drop = m_Player.FindAction("Drop", throwIfNotFound: true);
+        m_Player_DropTouch = m_Player.FindAction("DropTouch", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Newaction = m_UI.FindAction("New action", throwIfNotFound: true);
@@ -473,6 +537,8 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_MoveKeyboard;
     private readonly InputAction m_Player_MoveKeyboardHold;
     private readonly InputAction m_Player_MoveTouch;
+    private readonly InputAction m_Player_Drop;
+    private readonly InputAction m_Player_DropTouch;
     public struct PlayerActions
     {
         private @PlayerControls m_Wrapper;
@@ -481,6 +547,8 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         public InputAction @MoveKeyboard => m_Wrapper.m_Player_MoveKeyboard;
         public InputAction @MoveKeyboardHold => m_Wrapper.m_Player_MoveKeyboardHold;
         public InputAction @MoveTouch => m_Wrapper.m_Player_MoveTouch;
+        public InputAction @Drop => m_Wrapper.m_Player_Drop;
+        public InputAction @DropTouch => m_Wrapper.m_Player_DropTouch;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -502,6 +570,12 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @MoveTouch.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMoveTouch;
                 @MoveTouch.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMoveTouch;
                 @MoveTouch.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnMoveTouch;
+                @Drop.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnDrop;
+                @Drop.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnDrop;
+                @Drop.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnDrop;
+                @DropTouch.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnDropTouch;
+                @DropTouch.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnDropTouch;
+                @DropTouch.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnDropTouch;
             }
             m_Wrapper.m_PlayerActionsCallbackInterface = instance;
             if (instance != null)
@@ -518,6 +592,12 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @MoveTouch.started += instance.OnMoveTouch;
                 @MoveTouch.performed += instance.OnMoveTouch;
                 @MoveTouch.canceled += instance.OnMoveTouch;
+                @Drop.started += instance.OnDrop;
+                @Drop.performed += instance.OnDrop;
+                @Drop.canceled += instance.OnDrop;
+                @DropTouch.started += instance.OnDropTouch;
+                @DropTouch.performed += instance.OnDropTouch;
+                @DropTouch.canceled += instance.OnDropTouch;
             }
         }
     }
@@ -579,6 +659,8 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         void OnMoveKeyboard(InputAction.CallbackContext context);
         void OnMoveKeyboardHold(InputAction.CallbackContext context);
         void OnMoveTouch(InputAction.CallbackContext context);
+        void OnDrop(InputAction.CallbackContext context);
+        void OnDropTouch(InputAction.CallbackContext context);
     }
     public interface IUIActions
     {
